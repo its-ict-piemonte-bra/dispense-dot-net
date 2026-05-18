@@ -468,9 +468,13 @@ La sintassi metodo è generalmente preferita perché è più flessibile e funzio
 Filtra gli elementi in base a una condizione.
 
 ```csharp
+// Notazione query
 int[] numeri = new int[] { 1, 2, 3, 4, 5, 6 };
 
-IEnumerable<int> pari = numeri.Where(n => n % 2 == 0);
+IEnumerable<int> pari =
+    from n in numeri
+    where n % 2 == 0
+    select n;
 ```
 
 **Esempio meno adatto**
@@ -494,9 +498,12 @@ Il ciclo manuale è più verboso e sposta l'attenzione su come si fa, non su cos
 Trasforma ogni elemento applicando una funzione.
 
 ```csharp
+// Notazione query
 string[] nomi = new string[] { "alice", "bob", "carlo" };
 
-IEnumerable<string> nomiMaiuscoli = nomi.Select(n => n.ToUpper());
+IEnumerable<string> nomiMaiuscoli =
+    from n in nomi
+    select n.ToUpper();
 ```
 
 **Esempio meno adatto**
@@ -515,6 +522,7 @@ Il ciclo modifica la sorgente originale. Con `Select` la sorgente resta invariat
 Ordina la sequenza in modo crescente o decrescente.
 
 ```csharp
+// Notazione metodo
 int[] voti = new int[] { 18, 30, 22, 15 };
 
 IEnumerable<int> crescente = voti.OrderBy(v => v);
@@ -526,9 +534,12 @@ IEnumerable<int> decrescente = voti.OrderByDescending(v => v);
 Raggruppa gli elementi in base a una chiave comune.
 
 ```csharp
+// Notazione query
 string[] nomi = new string[] { "Alice", "Anna", "Bob", "Beatrice", "Carlo" };
 
-IEnumerable<IGrouping<char, string>> perIniziale = nomi.GroupBy(n => n[0]);
+IEnumerable<IGrouping<char, string>> perIniziale =
+    from n in nomi
+    group n by n[0];
 
 foreach (IGrouping<char, string> gruppo in perIniziale)
 {
@@ -546,6 +557,7 @@ foreach (IGrouping<char, string> gruppo in perIniziale)
 Restituiscono uno o il primo elemento che soddisfa una condizione.
 
 ```csharp
+// Notazione metodo
 int[] numeri = new int[] { 1, 3, 5, 6, 7 };
 
 // Primo pari, eccezione se non esiste
@@ -579,6 +591,7 @@ for (int i = 0; i < numeri.Length; i++)
 `All` verifica se tutti gli elementi la soddisfano.
 
 ```csharp
+// Notazione metodo
 int[] voti = new int[] { 18, 22, 30 };
 
 bool haInsufficienze = voti.Any(v => v < 18);
@@ -590,6 +603,7 @@ bool tuttiSufficienti = voti.All(v => v >= 18);
 Operatori di aggregazione che restituiscono un singolo valore.
 
 ```csharp
+// Notazione metodo
 int[] voti = new int[] { 18, 22, 30, 24 };
 
 int totale = voti.Count();
@@ -610,6 +624,7 @@ int sufficienti = voti.Count(v => v >= 18);
 Rimuove i duplicati dalla sequenza.
 
 ```csharp
+// Notazione metodo
 int[] numeri = new int[] { 1, 2, 2, 3, 3, 3 };
 
 IEnumerable<int> unici = numeri.Distinct();
@@ -621,6 +636,7 @@ IEnumerable<int> unici = numeri.Distinct();
 Sono spesso usati insieme per implementare la paginazione.
 
 ```csharp
+// Notazione metodo
 int[] numeri = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
 IEnumerable<int> primiTre = numeri.Take(3);
@@ -649,12 +665,11 @@ var votiStudenti = new[]
     new { IdStudente = 3, Voto = 30 }
 };
 
-var risultati = studenti.Join(
-    votiStudenti,
-    s => s.Id,
-    v => v.IdStudente,
-    (s, v) => new { s.Nome, v.Voto }
-);
+// Notazione query
+var risultati =
+    from s in studenti
+    join v in votiStudenti on s.Id equals v.IdStudente
+    select new { s.Nome, v.Voto };
 
 foreach (var r in risultati)
 {
@@ -667,6 +682,7 @@ foreach (var r in risultati)
 Materializzano la query: eseguono immediatamente la sequenza e restituiscono una lista o un array.
 
 ```csharp
+// Notazione metodo
 int[] numeri = new int[] { 1, 2, 3, 4, 5 };
 
 List<int> listaFiltrata = numeri.Where(n => n > 2).ToList();
