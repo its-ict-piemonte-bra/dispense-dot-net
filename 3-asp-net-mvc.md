@@ -1,7 +1,7 @@
-# ASP.NET — MVC e Minimal API
+# ASP.NET MVC
 
-Questa dispensa introduce ASP.NET, la piattaforma .NET per costruire applicazioni web.
-Si concentra su due modelli principali: ASP.NET MVC, pensato per applicazioni web con interfaccia utente, e ASP.NET Minimal API, pensato per servizi leggeri che espongono dati.
+Questa dispensa introduce ASP.NET MVC, il modello di ASP.NET pensato per applicazioni web con interfaccia utente server-side.
+Il focus e sulla struttura Model-View-Controller, sulle convenzioni del framework e sul flusso completo richiesta -> controller -> view.
 
 Prima di entrare in ASP.NET è necessario capire gli attributi, uno strumento del linguaggio C# usato ovunque nel framework.
 
@@ -430,219 +430,68 @@ Il controllo manuale funziona, ma va ripetuto in ogni metodo. `[Authorize]` cent
 
 ---
 
-## Capitolo 4 — ASP.NET Minimal API
+## Capitolo 4 — Setup di un progetto MVC
 
-### Cos'è e perché è stata introdotta
-
-Minimal API è un modello alternativo introdotto in .NET 6 per scrivere API HTTP in modo più semplice e con meno codice.
-Non usa controller, non usa view e non segue il pattern MVC.
-
-**Perché è stata introdotta**
-MVC nasce per applicazioni web complesse con interfaccia HTML.
-Per un servizio che restituisce solo JSON — come un'API usata da un'app mobile — MVC porta con sé strutture non necessarie.
-Minimal API riduce tutto al minimo indispensabile.
-
-### Struttura di un progetto Minimal API
-
-Tutto il codice può stare in `Program.cs`:
-
-```csharp
-var builder = WebApplication.CreateBuilder(args);
-var app = builder.Build();
-
-app.MapGet("/", () => "Ciao dal server");
-
-app.Run();
-```
-
-Questo è un server HTTP funzionante. Risponde a `GET /` con la stringa `"Ciao dal server"`.
-
-### Gestire i metodi HTTP
-
-```csharp
-app.MapGet("/prodotti", () =>
-{
-    return new[] { "Pane", "Latte", "Burro" };
-});
-
-app.MapPost("/prodotti", (Prodotto prodotto) =>
-{
-    // ricevi e salva
-    return Results.Created($"/prodotti/{prodotto.Id}", prodotto);
-});
-
-app.MapDelete("/prodotti/{id}", (int id) =>
-{
-    return Results.NoContent();
-});
-```
-
-### Parametri di rotta
-
-I parametri nell'URL vengono estratti automaticamente:
-
-```csharp
-app.MapGet("/prodotti/{id}", (int id) =>
-{
-    return $"Prodotto con id {id}";
-});
-```
-
-`{id}` nell'URL viene legato automaticamente al parametro `int id` della lambda.
-
-**Esempio meno adatto**
-
-```csharp
-app.MapGet("/prodotti/{id}", (HttpContext context) =>
-{
-    string? idStr = context.Request.RouteValues["id"]?.ToString();
-    int id = int.Parse(idStr ?? "0");
-    return $"Prodotto con id {id}";
-});
-```
-
-Il binding automatico è più sicuro e leggibile. La lettura manuale dal contesto è inutilmente verbosa.
-
-### Restituire JSON
-
-Minimal API serializza automaticamente gli oggetti C# in JSON:
-
-```csharp
-app.MapGet("/prodotti", () =>
-{
-    var prodotti = new[]
-    {
-        new { Id = 1, Nome = "Pane", Prezzo = 1.50 },
-        new { Id = 2, Nome = "Latte", Prezzo = 1.20 }
-    };
-
-    return prodotti;
-});
-```
-
-Il client riceve:
-
-```json
-[
-  { "id": 1, "nome": "Pane", "prezzo": 1.50 },
-  { "id": 2, "nome": "Latte", "prezzo": 1.20 }
-]
-```
-
-### Results: restituire risposte strutturate
-
-`Results` è una classe helper che permette di restituire risposte HTTP con codice di stato esplicito.
-
-```csharp
-app.MapGet("/prodotti/{id}", (int id) =>
-{
-    if (id <= 0)
-    {
-        return Results.BadRequest("Id non valido");
-    }
-
-    var prodotto = new { Id = id, Nome = "Pane" };
-    return Results.Ok(prodotto);
-});
-
-app.MapPost("/prodotti", (Prodotto prodotto) =>
-{
-    return Results.Created($"/prodotti/{prodotto.Id}", prodotto);
-});
-```
-
-| Metodo                   | Codice HTTP |
-|--------------------------|-------------|
-| `Results.Ok(...)`        | 200         |
-| `Results.Created(...)`   | 201         |
-| `Results.NoContent()`    | 204         |
-| `Results.BadRequest(...)` | 400        |
-| `Results.NotFound(...)`  | 404         |
-
-### Dependency Injection nelle Minimal API
-
-I servizi registrati nel container DI vengono iniettati automaticamente come parametri:
-
-```csharp
-builder.Services.AddSingleton<IProdottoRepository, ProdottoRepository>();
-
-app.MapGet("/prodotti", (IProdottoRepository repo) =>
-{
-    return repo.GetAll();
-});
-```
-
-### Raggruppare le rotte
-
-Per organizzare meglio le rotte si può usare `MapGroup`:
-
-```csharp
-var prodotti = app.MapGroup("/prodotti");
-
-prodotti.MapGet("/", () => "Lista prodotti");
-prodotti.MapGet("/{id}", (int id) => $"Prodotto {id}");
-prodotti.MapPost("/", (Prodotto p) => Results.Created($"/prodotti/{p.Id}", p));
-```
-
-### Attributo RequireAuthorization
-
-Nelle Minimal API la protezione si applica in modo fluente:
-
-```csharp
-app.MapGet("/admin", () => "Area riservata")
-   .RequireAuthorization();
-```
-
----
-
-## Capitolo 5 — MVC vs Minimal API: quando usare l'uno o l'altro
-
-### Confronto diretto
-
-| Caratteristica           | ASP.NET MVC                         | Minimal API                        |
-|--------------------------|-------------------------------------|------------------------------------|
-| Struttura                | Controller, View, Model             | Solo `Program.cs` (o file organizzati) |
-| Interfaccia utente HTML  | Sì, con Razor                       | No                                 |
-| Risposta tipica          | HTML o JSON                         | JSON                               |
-| Routing                  | Attributi o convenzione             | `MapGet`, `MapPost`, ecc.          |
-| Verbosità                | Più strutturata                     | Minima                             |
-| Scenari ideali           | Web app con pagine HTML             | API REST, microservizi             |
-| Introdotto in            | ASP.NET (storico)                   | .NET 6                             |
-
-### Quando scegliere MVC
-
-- stai costruendo un sito web con pagine HTML
-- hai bisogno di form, validazione lato server e view Razor
-- il progetto è grande e beneficia della struttura a cartelle
-
-### Quando scegliere Minimal API
-
-- stai costruendo un'API che restituisce solo JSON
-- il progetto è piccolo o un microservizio
-- vuoi meno codice e meno file da mantenere
-- consumi l'API da un frontend separato (React, Angular, app mobile)
-
-### Possono coesistere
-
-In .NET è possibile avere MVC e Minimal API nello stesso progetto.
-In pratica si usa MVC per le pagine web e Minimal API per gli endpoint REST.
+Il setup minimo di MVC in `Program.cs` e questo:
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
-app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 
-// Endpoint Minimal API accanto ai controller MVC
-app.MapGet("/api/stato", () => Results.Ok(new { Stato = "OK" }));
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
 ```
 
+Con `AddControllersWithViews()` abiliti sia i controller sia il rendering Razor.
+
 ---
 
-## Esercizi guidati
+## Capitolo 5 — Dependency Injection in MVC
+
+La registrazione dei servizi avviene in `Program.cs`:
+
+```csharp
+builder.Services.AddSingleton<IProdottoRepository, ProdottoRepository>();
+```
+
+Nel controller usi la constructor injection:
+
+```csharp
+class ProdottiController : Controller
+{
+    private readonly IProdottoRepository _repo;
+
+    public ProdottiController(IProdottoRepository repo)
+    {
+        _repo = repo;
+    }
+
+    public IActionResult Index()
+    {
+        return View(_repo.GetAll());
+    }
+}
+```
+
+---
+
+## Capitolo 6 — Organizzare un'app MVC reale
+
+Per mantenere il progetto leggibile:
+
+- tieni i controller sottili e sposta la logica di business in servizi
+- usa view model dedicati per la UI invece di passare sempre le entity
+- valida sempre i dati in input con Data Annotations e `ModelState`
+- usa `RedirectToAction` dopo una POST valida (pattern Post/Redirect/Get)
+
+---
+
+## Esercizi guidati (solo MVC)
 
 ### 1. Attributo personalizzato: annotare una classe
 
@@ -780,170 +629,184 @@ public IActionResult Crea(Ordine ordine)
 }
 ```
 
-### 6. Minimal API: endpoint GET che restituisce JSON
+### 6. MVC: action che restituisce JSON
 
 **Traccia**
 
-Crea un endpoint Minimal API che risponde a `GET /saluto` con un oggetto JSON.
+Crea una action MVC che risponde a `GET /saluto` con un oggetto JSON.
 
 **Come ragionare**
 
-1. Usa `app.MapGet`.
-2. Restituisci un tipo anonimo.
+1. Crea un controller dedicato.
+2. Definisci una action GET.
+3. Restituisci `Json(...)`.
 
 **Soluzione finale**
 
 ```csharp
-var builder = WebApplication.CreateBuilder(args);
-var app = builder.Build();
-
-app.MapGet("/saluto", () => new { Messaggio = "Ciao dal server" });
-
-app.Run();
+[Route("saluto")]
+class SalutoController : Controller
+{
+    [HttpGet]
+    public IActionResult Index()
+    {
+        return Json(new { Messaggio = "Ciao dal server" });
+    }
+}
 ```
 
-### 7. Minimal API: parametro di rotta
+### 7. MVC: parametro di rotta
 
 **Traccia**
 
-Crea un endpoint che riceve un `id` dall'URL e restituisce un oggetto con quell'id.
+Crea una action che riceve un `id` dall'URL e restituisce un oggetto con quell'id.
 
 **Come ragionare**
 
 1. Usa `{id}` nella rotta.
-2. Aggiungi `int id` come parametro della lambda.
+2. Aggiungi `int id` come parametro del metodo.
+3. Restituisci `Json(...)`.
 
 **Soluzione finale**
 
 ```csharp
-app.MapGet("/prodotti/{id}", (int id) =>
+[Route("prodotti")]
+class ProdottiController : Controller
 {
-    return Results.Ok(new { Id = id, Nome = "Prodotto esempio" });
-});
-```
-
-### 8. Minimal API: POST con body JSON
-
-**Traccia**
-
-Crea un endpoint POST che riceve un oggetto dal body e risponde con `201 Created`.
-
-**Come ragionare**
-
-1. Il parametro della lambda riceve il body deserializzato automaticamente.
-2. Usa `Results.Created` per la risposta.
-
-**Soluzione finale**
-
-```csharp
-app.MapPost("/prodotti", (Prodotto prodotto) =>
-{
-    return Results.Created($"/prodotti/{prodotto.Id}", prodotto);
-});
-```
-
-### 9. Minimal API: validazione e risposta 400
-
-**Traccia**
-
-Crea un endpoint GET che restituisce `400 Bad Request` se il parametro non è valido.
-
-**Come ragionare**
-
-1. Controlla il valore del parametro.
-2. Usa `Results.BadRequest` per il caso non valido.
-3. Usa `Results.Ok` per il caso valido.
-
-**Soluzione finale**
-
-```csharp
-app.MapGet("/prodotti/{id}", (int id) =>
-{
-    if (id <= 0)
+    [HttpGet("{id}")]
+    public IActionResult Dettaglio(int id)
     {
-        return Results.BadRequest("L'id deve essere maggiore di zero.");
+        return Json(new { Id = id, Nome = "Prodotto esempio" });
+    }
+}
+```
+
+### 8. MVC: POST con body e redirect
+
+**Traccia**
+
+Crea una action POST che riceve un model dal form, valida e poi reindirizza.
+
+**Come ragionare**
+
+1. Ricevi il model come parametro.
+2. Controlla `ModelState.IsValid`.
+3. Reindirizza a `Index` se valido.
+
+**Soluzione finale**
+
+```csharp
+[HttpPost]
+public IActionResult Crea(Prodotto prodotto)
+{
+    if (!ModelState.IsValid)
+    {
+        return View(prodotto);
     }
 
-    return Results.Ok(new { Id = id, Nome = "Prodotto" });
-});
+    return RedirectToAction("Index");
+}
 ```
 
-### 10. Esercizio complesso: API REST per una lista di prodotti
+### 9. MVC: proteggere area admin con Authorize
 
 **Traccia**
 
-Progetta una piccola API Minimal con queste rotte:
+Crea un controller admin accessibile solo da utenti autenticati.
 
-1. `GET /prodotti` — restituisce tutti i prodotti
-2. `GET /prodotti/{id}` — restituisce un prodotto per id o 404
-3. `POST /prodotti` — aggiunge un prodotto e risponde 201
-4. `DELETE /prodotti/{id}` — rimuove un prodotto o risponde 404
+**Come ragionare**
+
+1. Applica `[Authorize]` al controller.
+2. Definisci una action `Dashboard`.
+
+**Soluzione finale**
+
+```csharp
+using Microsoft.AspNetCore.Authorization;
+
+[Authorize]
+[Route("admin")]
+class AdminController : Controller
+{
+    [HttpGet]
+    public IActionResult Dashboard()
+    {
+        return View();
+    }
+}
+```
+
+### 10. Esercizio complesso: mini CRUD MVC prodotti
+
+**Traccia**
+
+Progetta un piccolo flusso MVC prodotti con queste action:
+
+1. `GET /prodotti` — mostra lista
+2. `GET /prodotti/crea` — mostra form
+3. `POST /prodotti/crea` — valida e salva
+4. `GET /prodotti/dettaglio/{id}` — mostra dettaglio o 404
 
 **Come ragionare passo per passo**
 
-1. Definisci un record o una classe `Prodotto` semplice.
-2. Usa una lista in memoria come fonte dati temporanea.
-3. Implementa ogni rotta separatamente.
-4. Per `GET {id}` e `DELETE {id}` usa `FirstOrDefault` per cercare il prodotto.
-5. Restituisci sempre il codice HTTP corretto con `Results`.
-6. Raggruppa le rotte con `MapGroup` per tenere il codice ordinato.
+1. Definisci il model `Prodotto` con Data Annotations.
+2. Prepara una lista in memoria come repository temporaneo.
+3. Implementa `Index`, `Crea` GET/POST e `Dettaglio`.
+4. In POST usa `ModelState.IsValid` e pattern Post/Redirect/Get.
+5. Per il dettaglio inesistente restituisci `NotFound()`.
 
 **Soluzione finale**
 
 ```csharp
-using System.Collections.Generic;
-using System.Linq;
+using Microsoft.AspNetCore.Mvc;
 
-var builder = WebApplication.CreateBuilder(args);
-var app = builder.Build();
-
-var prodotti = new List<Prodotto>
+[Route("prodotti")]
+class ProdottiController : Controller
 {
-    new Prodotto(1, "Pane", 1.50m),
-    new Prodotto(2, "Latte", 1.20m)
-};
+    private static readonly List<Prodotto> _prodotti =
+    [
+        new Prodotto { Id = 1, Nome = "Pane", Prezzo = 1.50m },
+        new Prodotto { Id = 2, Nome = "Latte", Prezzo = 1.20m }
+    ];
 
-var gruppo = app.MapGroup("/prodotti");
-
-gruppo.MapGet("/", () =>
-{
-    return Results.Ok(prodotti);
-});
-
-gruppo.MapGet("/{id}", (int id) =>
-{
-    Prodotto? trovato = prodotti.FirstOrDefault(p => p.Id == id);
-
-    if (trovato is null)
+    [HttpGet]
+    public IActionResult Index()
     {
-        return Results.NotFound($"Prodotto con id {id} non trovato.");
+        return View(_prodotti);
     }
 
-    return Results.Ok(trovato);
-});
-
-gruppo.MapPost("/", (Prodotto prodotto) =>
-{
-    prodotti.Add(prodotto);
-    return Results.Created($"/prodotti/{prodotto.Id}", prodotto);
-});
-
-gruppo.MapDelete("/{id}", (int id) =>
-{
-    Prodotto? trovato = prodotti.FirstOrDefault(p => p.Id == id);
-
-    if (trovato is null)
+    [HttpGet("crea")]
+    public IActionResult Crea()
     {
-        return Results.NotFound($"Prodotto con id {id} non trovato.");
+        return View();
     }
 
-    prodotti.Remove(trovato);
-    return Results.NoContent();
-});
+    [HttpPost("crea")]
+    public IActionResult Crea(Prodotto prodotto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(prodotto);
+        }
 
-app.Run();
+        prodotto.Id = _prodotti.Max(p => p.Id) + 1;
+        _prodotti.Add(prodotto);
+        return RedirectToAction("Index");
+    }
 
-record Prodotto(int Id, string Nome, decimal Prezzo);
+    [HttpGet("dettaglio/{id}")]
+    public IActionResult Dettaglio(int id)
+    {
+        var trovato = _prodotti.FirstOrDefault(p => p.Id == id);
+
+        if (trovato is null)
+        {
+            return NotFound();
+        }
+
+        return View(trovato);
+    }
+}
 ```
 
-Questo esercizio mette insieme attributi, routing, metodi HTTP, codici di stato, LINQ e i concetti di Minimal API in un servizio minimo ma funzionante.
+Questo esercizio mette insieme routing, binding, validazione, Razor views e gestione del flusso MVC in una mini applicazione completa.

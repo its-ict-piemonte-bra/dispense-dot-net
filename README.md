@@ -45,16 +45,26 @@ Ogni dispensa include spiegazioni progressive, esempi di codice commentati e 10 
 - Cap. 4 — Operatori principali: `Where`, `Select`, `OrderBy`, `GroupBy`, `First`/`FirstOrDefault`, `Any`/`All`, aggregazioni, `Distinct`, `Take`/`Skip`, `Join`, `ToList`/`ToArray`
 - 10 esercizi guidati
 
-### [3 — ASP.NET — MVC e Minimal API](3-asp-net.md)
+### [3 — ASP.NET MVC](3-asp-net-mvc.md)
 
 - Cap. 1 — Prerequisito: gli attributi in C#
 - Cap. 2 — Cos'è ASP.NET: ciclo richiesta/risposta, metodi HTTP, status code, routing
-- Cap. 3 — ASP.NET MVC: controller, routing, model, Data Annotations, Razor views, `IActionResult`
-- Cap. 4 — Minimal API: `MapGet`/`MapPost`/`MapDelete`, parametri, `Results`, dependency injection, `MapGroup`
-- Cap. 5 — MVC vs Minimal API: confronto e quando usare l'uno o l'altro
+- Cap. 3 — ASP.NET MVC: pattern, controller, routing, model, Data Annotations, Razor views, `IActionResult`
+- Cap. 4 — Setup progetto MVC e routing convenzionale
+- Cap. 5 — Dependency Injection e organizzazione applicativa
 - 10 esercizi guidati
 
-### [4 — Entity Framework Core](4-entity-framework.md)
+### [4 — ASP.NET Web API con ApiController](4-asp-net-api.md)
+
+- Cap. 1 — Obiettivo: progettare endpoint REST con ApiController
+- Cap. 2 — Setup base: `AddControllers` e `MapControllers`
+- Cap. 3 — Modello e validazione con Data Annotations
+- Cap. 4-7 — Controller API: GET/POST/PUT/DELETE e codici HTTP corretti
+- Cap. 8 — Autorizzazione con `[Authorize]`
+- Cap. 9 — Dependency Injection nei controller API
+- Errori comuni + esercizio guidato
+
+### [5 — Entity Framework Core](5-entity-framework.md)
 
 - Cap. 1 — Cos'è EF Core: il problema senza ORM, Code First vs Database First
 - Cap. 2 — DbContext e DbSet: differenza tra `List<T>` e `DbSet<T>`, `IEnumerable<T>` vs `IQueryable<T>`
