@@ -1,3 +1,5 @@
+![Enti finanziatori](assets/loghi-enti-finanziatori.jpg)
+
 # Programmazione orientata agli oggetti in C#
 
 Questa dispensa introduce la programmazione orientata agli oggetti, spesso indicata come OOP, nel contesto di C# e di .NET.

@@ -1,3 +1,5 @@
+![Enti finanziatori](assets/loghi-enti-finanziatori.jpg)
+
 # LINQ e le collezioni in C#
 
 Questa dispensa affronta due argomenti strettamente legati: le interfacce delle collezioni e LINQ.

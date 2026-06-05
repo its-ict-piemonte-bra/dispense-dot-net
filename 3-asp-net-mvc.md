@@ -1,3 +1,5 @@
+![Enti finanziatori](assets/loghi-enti-finanziatori.jpg)
+
 # ASP.NET MVC
 
 Questa dispensa introduce ASP.NET MVC, il modello di ASP.NET pensato per applicazioni web con interfaccia utente server-side.
@@ -655,17 +657,17 @@ class SalutoController : Controller
 }
 ```
 
-### 7. MVC: parametro di rotta
+### 7. MVC: dettaglio con View tipizzata
 
 **Traccia**
 
-Crea una action che riceve un `id` dall'URL e restituisce un oggetto con quell'id.
+Crea una action che riceve un `id` dall'URL e restituisce una view tipizzata con il prodotto trovato.
 
 **Come ragionare**
 
 1. Usa `{id}` nella rotta.
-2. Aggiungi `int id` come parametro del metodo.
-3. Restituisci `Json(...)`.
+2. Cerca il prodotto con LINQ.
+3. Restituisci `NotFound()` se non esiste, altrimenti `View(prodotto)`.
 
 **Soluzione finale**
 
@@ -673,19 +675,32 @@ Crea una action che riceve un `id` dall'URL e restituisce un oggetto con quell'i
 [Route("prodotti")]
 class ProdottiController : Controller
 {
+    private static readonly List<Prodotto> _prodotti =
+    [
+        new Prodotto { Id = 1, Nome = "Pane", Prezzo = 1.50m },
+        new Prodotto { Id = 2, Nome = "Latte", Prezzo = 1.20m }
+    ];
+
     [HttpGet("{id}")]
     public IActionResult Dettaglio(int id)
     {
-        return Json(new { Id = id, Nome = "Prodotto esempio" });
+        Prodotto? trovato = _prodotti.FirstOrDefault(p => p.Id == id);
+
+        if (trovato is null)
+        {
+            return NotFound();
+        }
+
+        return View(trovato);
     }
 }
 ```
 
-### 8. MVC: POST con body e redirect
+### 8. MVC: POST da form con redirect
 
 **Traccia**
 
-Crea una action POST che riceve un model dal form, valida e poi reindirizza.
+Crea una action POST che riceve un model da form HTML, valida e poi reindirizza.
 
 **Come ragionare**
 

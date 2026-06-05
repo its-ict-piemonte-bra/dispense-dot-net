@@ -1,3 +1,5 @@
+![Enti finanziatori](assets/loghi-enti-finanziatori.jpg)
+
 # Introduzione a .NET e C#
 
 Questa dispensa introduce i concetti fondamentali della piattaforma .NET e del linguaggio C#.

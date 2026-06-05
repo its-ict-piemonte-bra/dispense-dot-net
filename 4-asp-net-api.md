@@ -1,3 +1,5 @@
+![Enti finanziatori](assets/loghi-enti-finanziatori.jpg)
+
 # ASP.NET Web API con ApiController
 
 Questa dispensa introduce ASP.NET Web API usando l'approccio con ApiController.
@@ -34,50 +36,7 @@ Con questo setup ASP.NET cerca automaticamente i controller API e mappa le rotte
 
 ---
 
-## Capitolo 3 - Abilitare supporto XML
-
-Per default una Web API ASP.NET restituisce soprattutto JSON.
-Se vuoi supportare anche XML, devi aggiungere i formatter XML nella configurazione MVC.
-
-### Configurazione in Program.cs
-
-```csharp
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services
-    .AddControllers()
-    .AddXmlSerializerFormatters();
-
-var app = builder.Build();
-
-app.MapControllers();
-app.Run();
-```
-
-Se il metodo non e disponibile nel tuo progetto, aggiungi il pacchetto `Microsoft.AspNetCore.Mvc.Formatters.Xml`.
-
-### Come funziona la risposta JSON/XML
-
-ASP.NET usa la content negotiation in base all'header `Accept` del client:
-
-- `Accept: application/json` -> risposta JSON
-- `Accept: application/xml` -> risposta XML
-
-Esempio di test con curl:
-
-```bash
-curl -H "Accept: application/xml" https://localhost:5001/api/prodotti
-```
-
-### Quando conviene abilitarlo
-
-- integrazione con sistemi legacy che si aspettano XML
-- interoperabilita con client enterprise non JSON-first
-- migrazioni graduali da API storiche
-
----
-
-## Capitolo 4 - Attributi principali usati in Web API
+## Capitolo 3 - Attributi principali usati in Web API
 
 Questo capitolo elenca gli attributi principali che userai in questa dispensa e il loro significato.
 
@@ -112,7 +71,7 @@ Questo capitolo elenca gli attributi principali che userai in questa dispensa e 
 
 ---
 
-## Capitolo 5 - Cosa fanno [ApiController], [Route], [Authorize]
+## Capitolo 4 - Cosa fanno [ApiController], [Route], [Authorize]
 
 ### [ApiController]
 
@@ -159,7 +118,7 @@ public IActionResult SoloAdmin() => Ok();
 
 ---
 
-## Capitolo 6 - FromRoute, FromQuery, FromBody: cosa sono e quando usarli
+## Capitolo 5 - FromRoute, FromQuery, FromBody: cosa sono e quando usarli
 
 ### [FromRoute]
 
@@ -217,10 +176,17 @@ Metterli esplicitamente, pero, rende il codice piu leggibile e didattico.
 
 ---
 
-## Capitolo 7 - Modello e validazione request in dettaglio
+## Capitolo 6 - Modello e validazione request in dettaglio
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
+
+public class Prodotto
+{
+    public int Id { get; set; }
+    public string Nome { get; set; } = string.Empty;
+    public decimal Prezzo { get; set; }
+}
 
 public class ProdottoCreateRequest
 {
@@ -257,7 +223,7 @@ Se vuoi comportamento personalizzato sulle risposte di validazione, puoi configu
 
 ---
 
-## Capitolo 8 - Tutti i modi comuni per restituire status code
+## Capitolo 7 - Tutti i modi comuni per restituire status code
 
 In Web API puoi restituire uno status code in modi diversi.
 
@@ -324,25 +290,54 @@ Questo non cambia il runtime da solo, ma documenta chiaramente il contratto API.
 
 ---
 
-## Capitolo 9 - Struttura di un controller API
+## Capitolo 8 - Supporto XML e content negotiation
+
+Per default una Web API ASP.NET restituisce soprattutto JSON.
+Se vuoi supportare anche XML, devi aggiungere i formatter XML nella configurazione MVC.
+
+### Configurazione in Program.cs
+
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services
+    .AddControllers()
+    .AddXmlSerializerFormatters();
+
+var app = builder.Build();
+
+app.MapControllers();
+app.Run();
+```
+
+Se il metodo non e disponibile nel tuo progetto, aggiungi il pacchetto `Microsoft.AspNetCore.Mvc.Formatters.Xml`.
+
+### Come funziona la risposta JSON/XML
+
+ASP.NET usa la content negotiation in base all'header `Accept` del client:
+
+- `Accept: application/json` -> risposta JSON
+- `Accept: application/xml` -> risposta XML
+
+Esempio di test con curl:
+
+```bash
+curl -H "Accept: application/xml" https://localhost:5001/api/prodotti
+```
+
+### Quando conviene abilitarlo
+
+- integrazione con sistemi legacy che si aspettano XML
+- interoperabilita con client enterprise non JSON-first
+- migrazioni graduali da API storiche
+
+---
+
+## Capitolo 9 - Controller API completo (CRUD)
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
 
-[ApiController]
-[Route("api/[controller]")]
-public class ProdottiController : ControllerBase
-{
-}
-```
-
-`ControllerBase` fornisce helper come `Ok`, `NotFound`, `BadRequest`, `CreatedAtAction`.
-
----
-
-## Capitolo 10 - GET lista e GET per id
-
-```csharp
 [ApiController]
 [Route("api/[controller]")]
 public class ProdottiController : ControllerBase
@@ -371,74 +366,57 @@ public class ProdottiController : ControllerBase
 
         return Ok(trovato);
     }
-}
-```
 
----
-
-## Capitolo 11 - POST con validazione automatica
-
-```csharp
-[HttpPost]
-public ActionResult<Prodotto> Create([FromBody] ProdottoCreateRequest request)
-{
-    // Con [ApiController], se il model e invalido ASP.NET risponde 400 automaticamente.
-
-    var nuovoId = Prodotti.Count == 0 ? 1 : Prodotti.Max(p => p.Id) + 1;
-    var prodotto = new Prodotto
+    [HttpPost]
+    public ActionResult<Prodotto> Create([FromBody] ProdottoCreateRequest request)
     {
-        Id = nuovoId,
-        Nome = request.Nome,
-        Prezzo = request.Prezzo
-    };
+        var nuovoId = Prodotti.Count == 0 ? 1 : Prodotti.Max(p => p.Id) + 1;
+        var prodotto = new Prodotto
+        {
+            Id = nuovoId,
+            Nome = request.Nome,
+            Prezzo = request.Prezzo
+        };
 
-    Prodotti.Add(prodotto);
-
-    return CreatedAtAction(nameof(GetById), new { id = prodotto.Id }, prodotto);
-}
-```
-
-CreatedAtAction restituisce 201 Created e aggiunge l'header Location con URL della nuova risorsa.
-
----
-
-## Capitolo 12 - PUT e DELETE
-
-```csharp
-[HttpPut("{id:int}")]
-public IActionResult Update([FromRoute] int id, [FromBody] ProdottoCreateRequest request)
-{
-    var esistente = Prodotti.FirstOrDefault(p => p.Id == id);
-
-    if (esistente is null)
-    {
-        return NotFound();
+        Prodotti.Add(prodotto);
+        return CreatedAtAction(nameof(GetById), new { id = prodotto.Id }, prodotto);
     }
 
-    esistente.Nome = request.Nome;
-    esistente.Prezzo = request.Prezzo;
-
-    return NoContent();
-}
-
-[HttpDelete("{id:int}")]
-public IActionResult Delete(int id)
-{
-    var esistente = Prodotti.FirstOrDefault(p => p.Id == id);
-
-    if (esistente is null)
+    [HttpPut("{id:int}")]
+    public IActionResult Update([FromRoute] int id, [FromBody] ProdottoCreateRequest request)
     {
-        return NotFound();
+        var esistente = Prodotti.FirstOrDefault(p => p.Id == id);
+
+        if (esistente is null)
+        {
+            return NotFound();
+        }
+
+        esistente.Nome = request.Nome;
+        esistente.Prezzo = request.Prezzo;
+
+        return NoContent();
     }
 
-    Prodotti.Remove(esistente);
-    return NoContent();
+    [HttpDelete("{id:int}")]
+    public IActionResult Delete(int id)
+    {
+        var esistente = Prodotti.FirstOrDefault(p => p.Id == id);
+
+        if (esistente is null)
+        {
+            return NotFound();
+        }
+
+        Prodotti.Remove(esistente);
+        return NoContent();
+    }
 }
 ```
 
 ---
 
-## Capitolo 13 - Autorizzazione
+## Capitolo 10 - Autorizzazione
 
 ```csharp
 using Microsoft.AspNetCore.Authorization;
@@ -460,7 +438,7 @@ Questo endpoint richiede un utente autenticato secondo lo schema configurato nel
 
 ---
 
-## Capitolo 14 - Dependency Injection
+## Capitolo 11 - Dependency Injection
 
 Registrazione servizio:
 
@@ -492,7 +470,7 @@ public class ProdottiController : ControllerBase
 
 ---
 
-## Capitolo 15 - Errori comuni da evitare
+## Capitolo 12 - Errori comuni da evitare
 
 - Dimenticare `[ApiController]` e perdere validazione automatica e convenzioni API
 - Usare `Controller` invece di `ControllerBase` in un controller solo API
@@ -502,7 +480,7 @@ public class ProdottiController : ControllerBase
 
 ---
 
-## Esercizio guidato
+## Capitolo 13 - Esercizio guidato
 
 ### Traccia
 
@@ -532,26 +510,3 @@ ApiController e l'approccio consigliato quando vuoi API REST strutturate in ASP.
 - validazione automatica del model
 - codici HTTP espliciti e coerenti
 - piena integrazione con Dependency Injection, autenticazione e autorizzazione
-
----
-
-## Appendix - Model di esempio completo
-
-```csharp
-public class Prodotto
-{
-    public int Id { get; set; }
-    public string Nome { get; set; } = string.Empty;
-    public decimal Prezzo { get; set; }
-}
-
-public class ProdottoCreateRequest
-{
-    [Required(ErrorMessage = "Il nome e obbligatorio")]
-    [MaxLength(100)]
-    public string Nome { get; set; } = string.Empty;
-
-    [Range(0.01, 10000, ErrorMessage = "Prezzo non valido")]
-    public decimal Prezzo { get; set; }
-}
-```

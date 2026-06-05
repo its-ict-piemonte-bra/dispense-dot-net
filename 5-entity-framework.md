@@ -1,3 +1,5 @@
+![Enti finanziatori](assets/loghi-enti-finanziatori.jpg)
+
 # Entity Framework Core
 
 Questa dispensa introduce Entity Framework Core, il sistema di accesso ai dati raccomandato nell'ecosistema .NET.

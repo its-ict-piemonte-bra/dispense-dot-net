@@ -1,3 +1,5 @@
+![Enti finanziatori](assets/loghi-enti-finanziatori.jpg)
+
 # dispense-dot-net
 
 Dispense per il corso di Programmazione .NET / C#.
@@ -58,11 +60,12 @@ Ogni dispensa include spiegazioni progressive, esempi di codice commentati e 10 
 
 - Cap. 1 — Obiettivo: progettare endpoint REST con ApiController
 - Cap. 2 — Setup base: `AddControllers` e `MapControllers`
-- Cap. 3 — Modello e validazione con Data Annotations
-- Cap. 4-7 — Controller API: GET/POST/PUT/DELETE e codici HTTP corretti
-- Cap. 8 — Autorizzazione con `[Authorize]`
-- Cap. 9 — Dependency Injection nei controller API
-- Errori comuni + esercizio guidato
+- Cap. 3-5 — Attributi fondamentali, routing e model binding (`FromRoute`, `FromQuery`, `FromBody`)
+- Cap. 6 — Validazione request con Data Annotations e `ApiController`
+- Cap. 7 — Modalita di ritorno status code (`ActionResult<T>`, `IActionResult`, `StatusCode`, ecc.)
+- Cap. 8 — Supporto XML e content negotiation
+- Cap. 9-11 — CRUD completo, autorizzazione e dependency injection
+- Cap. 12-13 — Errori comuni + esercizio guidato
 
 ### [5 — Entity Framework Core](5-entity-framework.md)
 
